@@ -1,0 +1,41 @@
+﻿@page "/accounts"
+
+@using Microsoft.EntityFrameworkCore
+
+@inject Demo.TaskManagement.Data.ApplicationDbContext appDbContext;
+
+<h3>Společnosti</h3>
+
+<div>
+    <table class="table">
+        @if (accounts != null)
+        {
+            <tr class="top-row">
+                <th>Společnost</th>
+                <th>IČO</th>
+                <th>DIČ</th>
+            </tr>
+            @foreach (var account in accounts)
+            {
+                <tr>
+                    <td><a href="account/@account.Id" class="nav-link">@account.Title</a></td>
+                    <td>@account.TAXNumber</td>
+                    <td>@account.VATNumber</td>
+                </tr>
+            }
+        }
+    </table>
+    <p />
+    <div class="dialog-buttons">
+        <a href="account/0"><button class="btn btn-success ml-auto">Založit novou</button></a>
+    </div>
+</div>
+
+@code {
+    List<Demo.TaskManagement.Data.Entities.Account> accounts = new List<Demo.TaskManagement.Data.Entities.Account>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        accounts = await appDbContext.Accounts.ToListAsync();
+    }
+}

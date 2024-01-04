@@ -18,7 +18,9 @@ namespace Demo.TaskManagement.Data.Entities
         public string? DegreeAfter { get; set; }
         public string? FullName { get; set; }
         public string? Photo { get; set; }
-        public int? CompanyId { get; set; }
+        public int? AccountId { get; set; }
+
+        public Account? Account { get; set; }
 
         //public ICollection<Data.Task> CreatedTasks { get; set; }
         //public ICollection<Data.Task> AssignedTasks { get; set; }

@@ -14,8 +14,14 @@ namespace Demo.TaskManagement.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.Entity<Account>()
+                .HasMany(a => a.Users)
+                .WithOne(u => u.Account)
+                .HasForeignKey(u => u.AccountId);
         }
 
-        public DbSet<User> Users { get; set; }
+        //public DbSet<User> Users { get; set; }
+        public DbSet<Account> Accounts { get; set; }
     }
 }

@@ -1,0 +1,130 @@
+﻿@page "/account/{id:int}"
+@using Microsoft.EntityFrameworkCore
+
+@inject Demo.TaskManagement.Data.ApplicationDbContext appDbContext;
+@inject NavigationManager navigationManager;
+
+<h3>Detail společnosti</h3>
+
+<div class="main">
+    @if (accountExist == false && newAccount == false)
+    {
+        <p>Společnost s tímto ID neexistuje</p>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-6">
+                <label>Název:</label>
+                <input type="text" @bind=account.Title />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <label>IČO:</label>
+                <input type="text" @bind=account.TAXNumber />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <label>DIČ:</label>
+                <input type="text" @bind=account.VATNumber />
+            </div>
+        </div>
+
+        <p />
+        <div class="accordion-body">
+            <h4>Zaměstnanci</h4>
+            <table class="table">
+                @if (account != null && account.Users != null && account.Users.Any())
+                {
+                    @foreach (var user in account.Users)
+                    {
+                        <tr>
+                            <td><a href="user/@user.Id" class="nav-link">@user.FullName</a></td>
+                        </tr>
+                    }
+                }
+            </table>
+        </div>
+
+        <p />
+        <div class="dialog-buttons">
+            <button class="btn btn-success ml-auto" @onclick="SaveChanges">Uložit změny a zavřít</button>
+            @if (newAccount == false)
+            {
+                <button class="btn btn-danger mr-auto" @onclick="RemoveAccount">Smazat společnost</button>
+            }
+        </div>
+        <p />
+
+        @if (savingFailed)
+        {
+            <div class="alert alert-danger">Došlo k chybě při ukládání změn</div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int id { get; set; }
+    private bool accountExist = false;
+    private bool newAccount = false;
+    private bool savingFailed = false;
+
+    Demo.TaskManagement.Data.Entities.Account? account = new Demo.TaskManagement.Data.Entities.Account();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (id == 0)
+        {
+            newAccount = true;
+        }
+        else if (id > 0)
+        {
+            account = await appDbContext
+                .Accounts
+                .Include(a => a.Users)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            if (account != null)
+            {
+                accountExist = true;
+            }
+        }
+    }
+
+    async Task SaveChanges()
+    {
+        if (newAccount)
+        {
+            appDbContext.Accounts.Add(account);
+        }
+
+        try
+        {
+            await appDbContext.SaveChangesAsync();
+            navigationManager.NavigateTo(navigationManager.BaseUri + "/accounts", true);
+        }
+        catch (Exception ex)
+        {
+            savingFailed = true;
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    async Task RemoveAccount()
+    {
+        try
+        {
+            appDbContext.Accounts.Remove(account);
+            await appDbContext.SaveChangesAsync();
+            navigationManager.NavigateTo(navigationManager.BaseUri + "/accounts", true);
+        }
+        catch (Exception ex)
+        {
+            savingFailed = true;
+            Console.WriteLine(ex.Message);
+        }
+    }
+}

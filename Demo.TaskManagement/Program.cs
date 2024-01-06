@@ -17,6 +17,9 @@ builder.Services.AddDefaultIdentity<User>(/*options => options.SignIn.RequireCon
     .AddRoles<IdentityRole<int>>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddUserStore<CustomUserStore>();
+
+builder.Services.AddHttpClient();
+
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<User>>();
@@ -47,6 +50,7 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
+app.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id}");
 
 
 var scopeFactory = app.Services.GetRequiredService<IServiceScopeFactory>();

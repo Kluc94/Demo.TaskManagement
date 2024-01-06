@@ -1,8 +1,10 @@
 ﻿@page "/accounts"
+@attribute [Authorize(Roles = "Správce")]
 
 @using Microsoft.EntityFrameworkCore
 
-@inject Demo.TaskManagement.Data.ApplicationDbContext appDbContext;
+@inject HttpClient httpClient
+@inject NavigationManager NavigationManager
 
 <h3>Společnosti</h3>
 
@@ -36,6 +38,14 @@
 
     protected override async Task OnInitializedAsync()
     {
-        accounts = await appDbContext.Accounts.ToListAsync();
+        try
+        {
+
+            accounts = await httpClient.GetFromJsonAsync<List<Demo.TaskManagement.Data.Entities.Account>>(NavigationManager.BaseUri + "api/accounts");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(ex);
+        }
     }
 }

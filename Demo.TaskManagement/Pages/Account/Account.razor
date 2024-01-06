@@ -1,8 +1,12 @@
 ﻿@page "/account/{id:int}"
+@attribute [Authorize(Roles = "Správce")]
+
 @using Microsoft.EntityFrameworkCore
 
 @inject Demo.TaskManagement.Data.ApplicationDbContext appDbContext;
-@inject NavigationManager navigationManager;
+
+@inject HttpClient httpClient
+@inject NavigationManager navigationManager
 
 <h3>Detail společnosti</h3>
 
@@ -82,10 +86,7 @@
         }
         else if (id > 0)
         {
-            account = await appDbContext
-                .Accounts
-                .Include(a => a.Users)
-                .FirstOrDefaultAsync(a => a.Id == id);
+            account = await httpClient.GetFromJsonAsync<Demo.TaskManagement.Data.Entities.Account?>($"{navigationManager.BaseUri}api/accounts/{id}");
 
             if (account != null)
             {
@@ -96,35 +97,37 @@
 
     async Task SaveChanges()
     {
+        HttpResponseMessage responseMessage = new HttpResponseMessage();
         if (newAccount)
         {
-            appDbContext.Accounts.Add(account);
+            responseMessage = await httpClient.PostAsJsonAsync($"{navigationManager.BaseUri}api/accounts", account);
+        }
+        else
+        {
+            responseMessage = await httpClient.PutAsJsonAsync($"{navigationManager.BaseUri}api/accounts/{id}", account);
         }
 
-        try
+        if (responseMessage.IsSuccessStatusCode == true)
         {
-            await appDbContext.SaveChangesAsync();
             navigationManager.NavigateTo(navigationManager.BaseUri + "/accounts", true);
         }
-        catch (Exception ex)
+        else
         {
             savingFailed = true;
-            Console.WriteLine(ex.Message);
         }
     }
 
     async Task RemoveAccount()
     {
-        try
+        HttpResponseMessage responseMessage = await httpClient.DeleteAsync($"{navigationManager.BaseUri}api/accounts/{id}");
+
+        if (responseMessage.IsSuccessStatusCode == true)
         {
-            appDbContext.Accounts.Remove(account);
-            await appDbContext.SaveChangesAsync();
             navigationManager.NavigateTo(navigationManager.BaseUri + "/accounts", true);
         }
-        catch (Exception ex)
+        else
         {
             savingFailed = true;
-            Console.WriteLine(ex.Message);
         }
     }
 }

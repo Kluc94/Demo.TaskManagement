@@ -4,6 +4,7 @@ using Demo.TaskManagement.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Demo.TaskManagement.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240106183543_AddEntityTask")]
+    partial class AddEntityTask
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -43,36 +45,6 @@ namespace Demo.TaskManagement.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Accounts");
-                });
-
-            modelBuilder.Entity("Demo.TaskManagement.Data.Entities.Message", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<DateTime>("Created")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Note")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("TaskId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TaskId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Message");
                 });
 
             modelBuilder.Entity("Demo.TaskManagement.Data.Entities.Task", b =>
@@ -357,25 +329,6 @@ namespace Demo.TaskManagement.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Demo.TaskManagement.Data.Entities.Message", b =>
-                {
-                    b.HasOne("Demo.TaskManagement.Data.Entities.Task", "Task")
-                        .WithMany("Messages")
-                        .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Demo.TaskManagement.Data.Entities.User", "User")
-                        .WithMany("Messages")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Task");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Demo.TaskManagement.Data.Entities.Task", b =>
                 {
                     b.HasOne("Demo.TaskManagement.Data.Entities.Account", "Account")
@@ -470,18 +423,11 @@ namespace Demo.TaskManagement.Data.Migrations
                     b.Navigation("Users");
                 });
 
-            modelBuilder.Entity("Demo.TaskManagement.Data.Entities.Task", b =>
-                {
-                    b.Navigation("Messages");
-                });
-
             modelBuilder.Entity("Demo.TaskManagement.Data.Entities.User", b =>
                 {
                     b.Navigation("AssignedTasks");
 
                     b.Navigation("CreatedTasks");
-
-                    b.Navigation("Messages");
                 });
 #pragma warning restore 612, 618
         }

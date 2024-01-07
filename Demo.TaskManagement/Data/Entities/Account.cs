@@ -5,7 +5,7 @@
         public Account()
         {
             this.Users = new HashSet<User>();
-            //this.Tasks = new HashSet<Entities.Task>();
+            this.Tasks = new HashSet<Task>();
         }
 
         public int Id { get; set; }
@@ -14,6 +14,6 @@
         public string? VATNumber { get; set; }
 
         public ICollection<User> Users { get; set; }
-        //public ICollection<Entities.Task> Tasks { get; set; }
+        public ICollection<Task> Tasks { get; set; }
     }
 }

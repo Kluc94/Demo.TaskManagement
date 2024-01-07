@@ -1,0 +1,74 @@
+﻿@page "/tasks"
+@using System.Text.Json
+@attribute [Authorize]
+
+<h3>Úkoly</h3>
+
+@inject HttpClient httpClient
+@inject NavigationManager NavigationManager
+@inject IHttpClientFactory ClientFactory
+
+@if (loading == true)
+{
+    <h4> Načítám data </h4>
+}
+else if (loadingError == true)
+{
+    <h4> Došlo k chybě při načítání dat </h4>
+}
+else
+{
+    <div>
+        <table class="table">
+            @if (tasks != null)
+            {
+                <tr class="top-row">
+                    <th>Zadáno</th>
+                    <th>Název</th>
+                    <th>Přiřazeno</th>
+                    <th>Priorita</th>
+                    <th>Stav</th>
+                    <th>Termín</th>
+                    <th>Dokončeno</th>
+                </tr>
+                @foreach (var task in tasks)
+                {
+                    <tr>
+                        <td>@task.CreatedOn.ToString("dd.MM.yyy")</td>
+                        <td><a href="task/@task.Id" class="nav-link">@task.Title</a></td>
+                        <td>@task.AssignedTo.FullName</td>
+                        <td>@task.Priority</td>
+                        <td>@task.State</td>
+                        <td>@task.Deadline.ToString("dd.MM.yyy")</td>
+                        <td>@task.Solved?.ToString("dd.MM.yyy")</td>
+                    </tr>
+                }
+            }
+        </table>
+        <p />
+        <div class="dialog-buttons">
+            <a href="task/0"><button class="btn btn-success ml-auto">Vytvořit</button></a>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Demo.TaskManagement.Data.Entities.Task> tasks = new List<Data.Entities.Task>();
+    private bool loading = true;
+    private bool loadingError = false;
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        try
+        {
+            tasks = await httpClient.GetFromJsonAsync<List<Demo.TaskManagement.Data.Entities.Task>>(NavigationManager.BaseUri + "api/tasks/getTasksForView");
+            loading = false;
+        }
+        catch (Exception ex)
+        {
+            loading = false;
+            loadingError = true;
+            Console.Error.WriteLine(ex);
+        }
+    }
+}

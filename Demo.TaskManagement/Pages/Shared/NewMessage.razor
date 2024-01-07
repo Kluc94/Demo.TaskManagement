@@ -1,0 +1,34 @@
+﻿@using Data.Entities;
+
+<div class="dialog-container">
+    <div class="dialog">
+        <div class="dialog-title">
+            <h2>Přidat novou zprávu</h2>
+        </div>
+        <form class="dialog-body">
+            <div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label>Zpráva:</label>
+                        <textarea @bind=Message.Note/>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <div class="dialog-buttons">
+            <button class="btn btn-success ml-auto" @onclick="OnConfirm">Přidat</button>
+            <button class="btn btn-secondary mr-auto" @onclick="OnCancel">Zrušit</button>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    [Parameter]
+    public Data.Entities.Message Message { get; set; }
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+    [Parameter]
+    public EventCallback OnConfirm { get; set; }
+}

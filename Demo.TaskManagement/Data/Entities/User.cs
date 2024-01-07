@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Demo.TaskManagement.Data.Entities
 {
@@ -8,8 +6,9 @@ namespace Demo.TaskManagement.Data.Entities
     {
         public User()
         {
-            //this.CreatedTasks = new HashSet<Data.Task>();
-            //this.AssignedTasks = new HashSet<Data.Task>();
+            this.CreatedTasks = new HashSet<Task>();
+            this.AssignedTasks = new HashSet<Task>();
+            this.Messages = new HashSet<Message>();
         }
 
         public string? DegreeBefore { get; set; }
@@ -22,8 +21,9 @@ namespace Demo.TaskManagement.Data.Entities
 
         public Account? Account { get; set; }
 
-        //public ICollection<Data.Task> CreatedTasks { get; set; }
-        //public ICollection<Data.Task> AssignedTasks { get; set; }
+        public ICollection<Task> CreatedTasks { get; set; }
+        public ICollection<Task> AssignedTasks { get; set; }
+        public ICollection<Message> Messages { get; set; }
 
     }
 }

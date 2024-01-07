@@ -1,0 +1,266 @@
+﻿@page "/task/{id:int}"
+@attribute [Authorize]
+
+@using Demo.TaskManagement.Data.Entities
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+
+@inject Demo.TaskManagement.Data.ApplicationDbContext appDbContext;
+@inject HttpClient httpClient
+@inject NavigationManager navigationManager
+@inject UserManager<User> UserManager
+@inject AuthenticationStateProvider GetAuthenticationStateAsync
+
+<h3>Detail úkolu</h3>
+
+<div class="main">
+    @if (taskExist == false && newTask == false)
+    {
+        <p>Úkol s tímto ID neexistuje</p>
+    }
+    else if (newTask == true)
+    {
+        <div class="row">
+            <div class="col-md-6">
+                <label>Název:</label>
+                <input type="text" @bind=task.Title />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <label>Popis:</label>
+                <textarea @bind=task.Description />
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-6">
+                <label>Název:</label>
+                <input type="text" @bind=task.Title readonly />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <label>Popis:</label>
+                <textarea @bind=task.Description readonly />
+            </div>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-6">
+            <label>Priorita:</label>
+            <select @bind=task.Priority>
+                @foreach (var priority in System.Enum.GetValues(typeof(Data.Enums.TaskPriority)))
+                {
+                    <option value=@priority>@priority</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <label>Stav:</label>
+            <select @bind=task.State>
+                @foreach (var state in System.Enum.GetValues(typeof(Data.Enums.TaskState)))
+                {
+                    <option value=@state>@state</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <label>Termín:</label>
+            <input type="date" @bind=task.Deadline />
+        </div>
+    </div>
+
+    @if (newTask == false)
+    {
+        <div class="row">
+            <div class="col-md-6">
+                <label>Vyřešeno:</label>
+                <input type="date" @bind=task.Solved />
+            </div>
+        </div>
+    }
+
+    <p />
+    <div class="dialog-buttons">
+        <button class="btn btn-success ml-auto" @onclick="SaveChanges">Uložit změny a zavřít</button>
+        @if (newTask == false)
+        {
+            <button class="btn btn-danger mr-auto" @onclick="RemoveTask">Smazat úkol</button>
+        }
+    </div>
+    <p />
+
+    @if (newTask == false)
+    {
+        <p />
+        <div class="accordion-body">
+            <h4>Zprávy</h4>
+            <table class="table">
+                @if (task != null && task.Messages != null && task.Messages.Any())
+                {
+                    <tr class="top-row">
+                        <th>Odesilatel</th>
+                        <th>Datum</th>
+                        <th>Zpráva</th>
+                    </tr>
+
+                    @foreach (var message in task.Messages)
+                    {
+                        <tr>
+                            <td>@message.User.FullName</td>
+                            <td>@message.Created.ToString("dd.MM.yyyy hh:mm")</td>
+                            <td>@message.Note</td>
+                        </tr>
+                    }
+                }
+            </table>
+
+            <p />
+            <div class="dialog-buttons">
+                <button class="btn btn-success ml-auto" @onclick="@(() => ShowNewMessageDialog())">Přidat zprávu</button>
+            </div>
+            <p />
+        </div>
+    }
+
+
+    @if (savingFailed)
+    {
+        <div class="alert alert-danger">Došlo k chybě při ukládání změn</div>
+    }
+    @if (addingMessageFailed)
+    {
+        <div class="alert alert-danger">Došlo k chybě při zadávání nové zprávy</div>
+    }
+</div>
+
+@if (addingMessage)
+{
+    <Demo.TaskManagement.Pages.Shared.NewMessage Message=Message
+                                                 OnCancel=CancelAddingMessage
+                                                 OnConfirm=ConfirmAddingMessage />
+}
+
+@code {
+    [Parameter]
+    public int id { get; set; }
+    private bool taskExist = false;
+    private bool newTask = false;
+    private bool savingFailed = false;
+    private bool addingMessage = false;
+    private bool addingMessageFailed = false;
+
+    private User userLogged;
+
+    private Demo.TaskManagement.Data.Entities.Message Message = new Data.Entities.Message();
+
+    Demo.TaskManagement.Data.Entities.Task? task = new Demo.TaskManagement.Data.Entities.Task();
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        var authstate = await GetAuthenticationStateAsync.GetAuthenticationStateAsync();
+        var user = authstate.User;
+        userLogged = await UserManager.GetUserAsync(user);
+    }
+
+    protected override async System.Threading.Tasks.Task OnParametersSetAsync()
+    {
+        task.Deadline = DateTime.Today;
+
+        if (id == 0)
+        {
+            newTask = true;
+        }
+        else if (id > 0)
+        {
+            task = await httpClient.GetFromJsonAsync<Demo.TaskManagement.Data.Entities.Task?>($"{navigationManager.BaseUri}api/tasks/getTasksWithMessages/{id}");
+
+            if (task != null)
+            {
+                taskExist = true;
+            }
+        }
+    }
+
+    async System.Threading.Tasks.Task SaveChanges()
+    {
+        HttpResponseMessage responseMessage = new HttpResponseMessage();
+        if (newTask)
+        {
+            task.AccountId = 1;
+            task.AssignedToId = 12;
+            task.CreatedById = 12;
+            task.CreatedOn = DateTime.Now;
+
+            responseMessage = await httpClient.PostAsJsonAsync($"{navigationManager.BaseUri}api/tasks", task);
+            var a = responseMessage.Content;
+        }
+        else
+        {
+            responseMessage = await httpClient.PutAsJsonAsync($"{navigationManager.BaseUri}api/tasks/{id}", task);
+        }
+
+        if (responseMessage.IsSuccessStatusCode == true)
+        {
+            navigationManager.NavigateTo(navigationManager.BaseUri + "/tasks", true);
+        }
+        else
+        {
+            savingFailed = true;
+        }
+    }
+
+    async System.Threading.Tasks.Task RemoveTask()
+    {
+        HttpResponseMessage responseMessage = await httpClient.DeleteAsync($"{navigationManager.BaseUri}api/tasks/{id}");
+
+        if (responseMessage.IsSuccessStatusCode == true)
+        {
+            navigationManager.NavigateTo(navigationManager.BaseUri + "/tasks", true);
+        }
+        else
+        {
+            savingFailed = true;
+        }
+    }
+
+    async System.Threading.Tasks.Task ShowNewMessageDialog()
+    {
+        Message = new Data.Entities.Message();
+        addingMessage = true;
+        addingMessageFailed = false;
+    }
+
+    async System.Threading.Tasks.Task ConfirmAddingMessage()
+    {
+        Message.Created = DateTime.UtcNow;
+        Message.TaskId = task.Id;
+        Message.UserId = userLogged.Id;
+
+        HttpResponseMessage responseMessage = await httpClient.PostAsJsonAsync($"{navigationManager.BaseUri}api/messages", Message);
+        if (responseMessage.IsSuccessStatusCode == true)
+        {
+            navigationManager.NavigateTo(navigationManager.Uri, true);
+        }
+        else
+        {
+            addingMessageFailed = true;
+            addingMessage = false;
+        }
+    }
+
+    async System.Threading.Tasks.Task CancelAddingMessage()
+    {
+        addingMessage = false;
+    }
+}

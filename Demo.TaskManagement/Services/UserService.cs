@@ -1,6 +1,7 @@
 ﻿using Demo.TaskManagement.Data;
 using Demo.TaskManagement.Data.Entities;
 using Microsoft.AspNetCore.Identity;
+using Task = System.Threading.Tasks.Task;
 
 namespace Demo.TaskManagement.Services
 {

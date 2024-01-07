@@ -104,6 +104,35 @@
     {
         <p />
         <div class="accordion-body">
+            <h4>Kroky řešení</h4>
+            <table class="table">
+                @if (task != null && task.CheckListSteps != null && task.CheckListSteps.Any())
+                {
+                    <tr class="top-row">
+                        <th>Název</th>
+                        <th>Termín</th>
+                        <th>Splněno</th>
+                    </tr>
+
+                    @foreach (var step in task.CheckListSteps)
+                    {
+                        <tr>
+                            <td><a href="checkListStep/@step.Id/@task.Id" class="nav-link">@step.Title</a></td>
+                            <td>@step.Deadline.ToString("dd.MM.yyyy")</td>
+                            <td>@step.Finished</td>
+                        </tr>
+                    }
+                }
+            </table>
+
+            <p />
+            <div class="dialog-buttons">
+                <a href="checkListStep/0/@task.Id"><button class="btn btn-success ml-auto">Přidat krok řešení</button></a>
+            </div>
+        </div>
+
+        <p />
+        <div class="accordion-body">
             <h4>Zprávy</h4>
             <table class="table">
                 @if (task != null && task.Messages != null && task.Messages.Any())

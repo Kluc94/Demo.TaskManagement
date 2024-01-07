@@ -26,6 +26,7 @@ public class Task
     public User? CreatedBy { get; set; }
     public User? AssignedTo { get; set; }
     public Account? Account { get; set; }
+    public ICollection<CheckListStep> CheckListSteps { get; set; }
     public ICollection<Message> Messages { get; set; }
     //public ICollection<Attachment> Attachments { get; set; }
 }

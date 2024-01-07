@@ -10,7 +10,8 @@ namespace Demo.TaskManagement.Data
         //public DbSet<User> Users { get; set; }
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Entities.Task> Tasks { get; set; }
-        public DbSet<Message>? Message { get; set; }
+        public DbSet<Message> Message { get; set; }
+        public DbSet<CheckListStep> CheckListSteps { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
@@ -55,6 +56,11 @@ namespace Demo.TaskManagement.Data
                 .HasForeignKey(t => t.TaskId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            builder.Entity<Entities.Task>()
+                .HasMany(t => t.CheckListSteps)
+                .WithOne(c => c.Task)
+                .HasForeignKey(c => c.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

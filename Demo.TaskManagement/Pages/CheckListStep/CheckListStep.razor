@@ -1,0 +1,134 @@
+﻿@page "/checkListStep/{id:int}/{taskId:int}"
+@attribute [Authorize]
+
+@inject HttpClient httpClient
+@inject NavigationManager navigationManager
+
+<h3>Krok řešení</h3>
+
+<div class="main">
+    @if (stepExist == false && newStep == false)
+    {
+        <p>Krok řešení s tímto ID neexistuje</p>
+    }
+    else if (newStep)
+    {
+        <div class="row">
+            <div class="col-md-6">
+                <label>Název:</label>
+                <input type="text" @bind=step.Title />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <label>Termín:</label>
+                <input type="date" @bind=step.Deadline />
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-6">
+                <label>Název:</label>
+                <input type="text" @bind=step.Title readonly />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <label>Termín:</label>
+                <input type="date" @bind=step.Deadline readonly />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <label>Dokončeno:</label>
+                <input type="checkbox" @bind=step.Finished />
+            </div>
+        </div>
+    }
+
+    <p />
+    <div class="dialog-buttons">
+        <button class="btn btn-success ml-auto" @onclick="SaveChanges">Uložit změny a zavřít</button>
+        @if (newStep == false)
+        {
+            <button class="btn btn-danger mr-auto" @onclick="RemoveAccount">Smazat krok</button>
+        }
+    </div>
+    <p />
+
+    @if (savingFailed)
+    {
+        <div class="alert alert-danger">Došlo k chybě při ukládání změn</div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int id { get; set; }
+    [Parameter]
+    public int taskId { get; set; }
+    private bool newStep { get; set; }
+    private bool stepExist { get; set; }
+    private bool savingFailed = false;
+
+    Demo.TaskManagement.Data.Entities.CheckListStep? step = new Demo.TaskManagement.Data.Entities.CheckListStep();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (id == 0)
+        {
+            newStep = true;
+            step.Deadline = DateTime.Today;
+        }
+        else if (id > 0)
+        {
+            step = await httpClient.GetFromJsonAsync<Demo.TaskManagement.Data.Entities.CheckListStep?>($"{navigationManager.BaseUri}api/checkListSteps/{id}");
+
+            if (step != null)
+            {
+                stepExist = true;
+            }
+        }
+    }
+
+    async Task SaveChanges()
+    {
+        HttpResponseMessage responseMessage = new HttpResponseMessage();
+        if (newStep)
+        {
+            step.TaskId = taskId;
+            step.Finished = false;
+            responseMessage = await httpClient.PostAsJsonAsync($"{navigationManager.BaseUri}api/checkListSteps", step);
+        }
+        else
+        {
+            responseMessage = await httpClient.PutAsJsonAsync($"{navigationManager.BaseUri}api/checkListSteps/{id}", step);
+        }
+
+        if (responseMessage.IsSuccessStatusCode == true)
+        {
+            navigationManager.NavigateTo(navigationManager.BaseUri + "/task/" + taskId, true);
+        }
+        else
+        {
+            savingFailed = true;
+        }
+    }
+
+    async Task RemoveAccount()
+    {
+        HttpResponseMessage responseMessage = await httpClient.DeleteAsync($"{navigationManager.BaseUri}api/checkListSteps/{id}");
+
+        if (responseMessage.IsSuccessStatusCode == true)
+        {
+            navigationManager.NavigateTo(navigationManager.BaseUri + "/task/" + taskId, true);
+        }
+        else
+        {
+            savingFailed = true;
+        }
+    }
+}

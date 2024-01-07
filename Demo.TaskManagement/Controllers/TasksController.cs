@@ -143,6 +143,7 @@ namespace Demo.TaskManagement.Controllers
                 .Tasks
                 .Include(t => t.Messages)
                     .ThenInclude(m => m.User)
+                .Include(t => t.CheckListSteps)
                 .FirstOrDefaultAsync(t => t.Id == id);
 
             if (task == null)

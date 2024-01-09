@@ -1,0 +1,145 @@
+﻿@page "/user/{id:int}"
+@attribute [Authorize(Roles = "Správce")]
+
+@inject HttpClient httpClient
+@inject NavigationManager navigationManager
+
+<h3>Detail uživatele</h3>
+
+<div class="main">
+    @if (userExist == false && newUser == false)
+    {
+        <p>Společnost s tímto ID neexistuje</p>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-6">
+                <label>Titul před:</label>
+                <input type="text" @bind=user.DegreeBefore/>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <label>Jméno:</label>
+                <input type="text" @bind=user.FirstName />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <label>Příjmení:</label>
+                <input type="text" @bind=user.LastName />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <label>Titul za:</label>
+                <input type="text" @bind=user.DegreeAfter />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <label>Tel. číslo:</label>
+                <input type="text" @bind=user.PhoneNumber/>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <label>E-mail:</label>
+                <input type="text" @bind=user.Email />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <label>Společnost:</label>
+                <select @bind=user.AccountId>
+                    @foreach (var account in accounts)
+                    {
+                        <option value=@account.Id>@account.Title</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <p />
+        <div class="dialog-buttons">
+            <button class="btn btn-success ml-auto" @onclick="SaveChanges">Uložit změny a zavřít</button>
+            @if (newUser == false)
+            {
+                <button class="btn btn-danger mr-auto" @onclick="RemoveAccount">Smazat uživatele</button>
+            }
+        </div>
+        <p />
+
+        @if (savingFailed)
+        {
+            <div class="alert alert-danger">Došlo k chybě při ukládání změn</div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int id { get; set; }
+    private bool userExist = false;
+    private bool newUser = false;
+    private bool savingFailed = false;
+
+    Demo.TaskManagement.Data.Entities.User? user = new Demo.TaskManagement.Data.Entities.User();
+    List<Demo.TaskManagement.Data.Entities.Account> accounts = new List<Demo.TaskManagement.Data.Entities.Account>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        accounts = await httpClient.GetFromJsonAsync<List<Demo.TaskManagement.Data.Entities.Account>>(navigationManager.BaseUri + "api/accounts");
+
+        if (id == 0)
+        {
+            newUser = true;
+        }
+        else if (id > 0)
+        {
+            user = await httpClient.GetFromJsonAsync<Demo.TaskManagement.Data.Entities.User?>($"{navigationManager.BaseUri}api/users/{id}");
+
+            if (user != null)
+            {
+                userExist = true;
+            }
+        }
+    }
+
+    async Task SaveChanges()
+    {
+        HttpResponseMessage responseMessage = new HttpResponseMessage();
+        if (newUser)
+        {
+            responseMessage = await httpClient.PostAsJsonAsync($"{navigationManager.BaseUri}api/users", user);
+        }
+        else
+        {
+            responseMessage = await httpClient.PutAsJsonAsync($"{navigationManager.BaseUri}api/users/{id}", user);
+        }
+
+        if (responseMessage.IsSuccessStatusCode == true)
+        {
+            navigationManager.NavigateTo(navigationManager.BaseUri + "/users", true);
+        }
+        else
+        {
+            savingFailed = true;
+        }
+    }
+
+    async Task RemoveAccount()
+    {
+        HttpResponseMessage responseMessage = await httpClient.DeleteAsync($"{navigationManager.BaseUri}api/users/{id}");
+
+        if (responseMessage.IsSuccessStatusCode == true)
+        {
+            navigationManager.NavigateTo(navigationManager.BaseUri + "/users", true);
+        }
+        else
+        {
+            savingFailed = true;
+        }
+    }
+}

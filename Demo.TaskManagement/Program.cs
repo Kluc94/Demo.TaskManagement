@@ -1,6 +1,7 @@
 using Demo.TaskManagement.Areas.Identity;
 using Demo.TaskManagement.Data;
 using Demo.TaskManagement.Data.Entities;
+using Demo.TaskManagement.Data.Triggers;
 using Demo.TaskManagement.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -11,17 +12,24 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options
+    .UseSqlServer(connectionString)
+    .UseTriggers(triggerOptions =>
+    {
+        triggerOptions.AddTrigger<UserTrigger>();
+    }));
+
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
 builder.Services.AddDefaultIdentity<User>(/*options => options.SignIn.RequireConfirmedAccount = true*/)
     .AddRoles<IdentityRole<int>>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddUserStore<CustomUserStore>();
 
 builder.Services.AddHttpClient();
-
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+
 builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<User>>();
 
 builder.Services.AddControllersWithViews()

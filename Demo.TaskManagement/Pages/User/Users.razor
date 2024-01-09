@@ -1,0 +1,57 @@
+﻿@page "/users"
+@attribute [Authorize(Roles = "Správce")]
+
+@using Microsoft.EntityFrameworkCore
+
+@inject HttpClient httpClient
+@inject NavigationManager NavigationManager
+
+<h3>Uživatelé</h3>
+
+<div>
+    <table class="table">
+        @if (users != null)
+        {
+            <tr class="top-row">
+                <th>Jméno</th>
+                <th>E-mail</th>
+                <th>Společnost</th>
+            </tr>
+            @foreach (var user in users)
+            {
+                <tr>
+                    <td><a href="user/@user.Id" class="nav-link">@user.FullName</a></td>
+                    <td>@user.Email</td>
+                    @if (user.Account != null && user.Account.Id != null)
+                    {
+                        <td><a href="account/@user.Account?.Id" class="nav-link">@user.Account?.Title</a></td>
+                    }
+                    else
+                    {
+                        <td>@user.Account?.Title</td>
+                    }
+                </tr>
+            }
+        }
+    </table>
+    <p />
+    <div class="dialog-buttons">
+        <a href="user/0"><button class="btn btn-success ml-auto">Vytvořit uživatele</button></a>
+    </div>
+</div>
+
+@code {
+    List<Demo.TaskManagement.Data.Entities.User> users = new List<Demo.TaskManagement.Data.Entities.User>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            users = await httpClient.GetFromJsonAsync<List<Demo.TaskManagement.Data.Entities.User>>(NavigationManager.BaseUri + "api/users/getUsersWithAccount");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(ex);
+        }
+    }
+}

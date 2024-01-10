@@ -1,4 +1,5 @@
 ﻿using Demo.TaskManagement.Data.Enums;
+using Demo.TaskManagement.Pages.CheckListStep;
 
 namespace Demo.TaskManagement.Data.Entities;
 
@@ -7,7 +8,7 @@ public class Task
     public Task()
     {
         this.Messages = new HashSet<Message>();
-        //this.Attachment = new HashSet<Attachment>();
+        this.CheckListSteps = new HashSet<CheckListStep>();
     }
 
     public int Id { get; set; }

@@ -78,7 +78,7 @@ namespace Demo.TaskManagement.Services
                     break;
             }
 
-            if (accountId != null)
+            if (accountId != null && accountId != 0)
             {
                 tasks = tasks?.Where(t => t.AccountId == accountId);
             }

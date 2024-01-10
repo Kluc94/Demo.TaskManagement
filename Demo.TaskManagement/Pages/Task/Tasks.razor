@@ -123,10 +123,11 @@ else
         try
         {
             accounts = await httpClient.GetFromJsonAsync<List<Demo.TaskManagement.Data.Entities.Account>>(NavigationManager.BaseUri + "api/accounts");
-            accountsTaskId = accounts.First().Id;
             users = await httpClient.GetFromJsonAsync<List<Demo.TaskManagement.Data.Entities.User>>(NavigationManager.BaseUri + "api/users");
-            viewForUserId = users.First().Id;
             tasks = await httpClient.GetFromJsonAsync<List<Demo.TaskManagement.Data.Entities.Task>>($"{NavigationManager.BaseUri}api/tasks/getTasksForView/{viewName}/{accountsTaskId}/{viewForUserId}");
+            
+            accountsTaskId = accounts.First().Id;
+            viewForUserId = users.First().Id;
             loading = false;
         }
         catch (Exception ex)

@@ -22,6 +22,17 @@
     {
         <div class="row">
             <div class="col-md-6">
+                <label>Společnost:</label>
+                <select @bind=task.AccountId>
+                    @foreach (var account in accounts)
+                    {
+                        <option value=@account.Id>@account.Title</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
                 <label>Název:</label>
                 <input type="text" @bind=task.Title />
             </div>
@@ -32,9 +43,26 @@
                 <textarea @bind=task.Description />
             </div>
         </div>
+        <div class="row">
+            <div class="col-md-6">
+                <label>Přiřazeno:</label>
+                <select @bind=task.AssignedToId>
+                    @foreach (var user in users)
+                    {
+                        <option value=@user.Id>@user.FullName</option>
+                    }
+                </select>
+            </div>
+        </div>
     }
     else
     {
+        <div class="row">
+            <div class="col-md-6">
+                <label>Společnost:</label>
+                <input type="text" @bind=task.Account.Title readonly />
+            </div>
+        </div>
         <div class="row">
             <div class="col-md-6">
                 <label>Název:</label>
@@ -45,6 +73,17 @@
             <div class="col-md-6">
                 <label>Popis:</label>
                 <textarea @bind=task.Description readonly />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <label>Přiřazeno:</label>
+                <select @bind=task.AssignedToId>
+                    @foreach (var user in users)
+                    {
+                        <option value=@user.Id>@user.FullName</option>
+                    }
+                </select>
             </div>
         </div>
     }
@@ -190,10 +229,14 @@
     private bool addingMessageFailed = false;
 
     private User userLogged;
+    private int accountId = 0;
+    private int assignedToId = 0;
 
     private Demo.TaskManagement.Data.Entities.Message Message = new Data.Entities.Message();
+    private Demo.TaskManagement.Data.Entities.Task? task = new Demo.TaskManagement.Data.Entities.Task();
+    private List<Demo.TaskManagement.Data.Entities.Account> accounts = new List<Demo.TaskManagement.Data.Entities.Account>();
+    private List<Demo.TaskManagement.Data.Entities.User> users = new List<Demo.TaskManagement.Data.Entities.User>();
 
-    Demo.TaskManagement.Data.Entities.Task? task = new Demo.TaskManagement.Data.Entities.Task();
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
@@ -205,6 +248,9 @@
     protected override async System.Threading.Tasks.Task OnParametersSetAsync()
     {
         task.Deadline = DateTime.Today;
+
+        accounts = await httpClient.GetFromJsonAsync<List<Demo.TaskManagement.Data.Entities.Account>>(navigationManager.BaseUri + "api/accounts");
+        users = await httpClient.GetFromJsonAsync<List<Demo.TaskManagement.Data.Entities.User>>(navigationManager.BaseUri + "api/users");
 
         if (id == 0)
         {
@@ -226,9 +272,7 @@
         HttpResponseMessage responseMessage = new HttpResponseMessage();
         if (newTask)
         {
-            task.AccountId = 1;
-            task.AssignedToId = 12;
-            task.CreatedById = 12;
+            task.CreatedById = userLogged.Id;
             task.CreatedOn = DateTime.Now;
 
             responseMessage = await httpClient.PostAsJsonAsync($"{navigationManager.BaseUri}api/tasks", task);

@@ -1,5 +1,6 @@
 ﻿@page "/tasks"
 @using System.Text.Json
+@using Microsoft.AspNetCore.Identity
 @attribute [Authorize]
 
 <h3>Úkoly</h3>
@@ -7,6 +8,8 @@
 @inject HttpClient httpClient
 @inject NavigationManager NavigationManager
 @inject IHttpClientFactory ClientFactory
+@inject UserManager<Demo.TaskManagement.Data.Entities.User> UserManager
+@inject AuthenticationStateProvider GetAuthenticationStateAsync
 
 @if (loading == true)
 {
@@ -18,7 +21,47 @@ else if (loadingError == true)
 }
 else
 {
-    <div>
+    <div class="main">
+        <div class="row">
+            <div class="col-md-6">
+                <label>Pohled:</label>
+                <select @onchange=OnChangeView>
+                    <option value=all>Všechny</option>
+                    <option value=byCreator>Dle zadavatele</option>
+                    <option value=byAssignedTo>Dle řešitele</option>
+                    <option value=open>Nevyřešené</option>
+                    <option value=openAfterDeadLine>Nevyřešené po termínu</option>
+                    <option value=openChecklistAfterDeadline>Nevyřešené s kroky po termínu</option>
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <label>Společnost:</label>
+                <select @onchange=OnChangeAccount>
+                    @foreach (var account in accounts)
+                    {
+                        @if (isAdminOrDeveloper == true || account.Id == userLogged.AccountId)
+                        {
+                            <option value=@account.Id>@account.Title</option>
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <label>Uživatel:</label>
+                <select @onchange=OnChangeUser>
+                    @foreach (var user in users)
+                    {
+                        <option value=@user.Id>@user.FullName</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+
         <table class="table">
             @if (tasks != null)
             {
@@ -54,14 +97,36 @@ else
 
 @code {
     private List<Demo.TaskManagement.Data.Entities.Task> tasks = new List<Data.Entities.Task>();
+    private List<Demo.TaskManagement.Data.Entities.Account> accounts = new List<Demo.TaskManagement.Data.Entities.Account>();
+    private List<Demo.TaskManagement.Data.Entities.User> users = new List<Demo.TaskManagement.Data.Entities.User>();
+    private Demo.TaskManagement.Data.Entities.User userLogged = new Demo.TaskManagement.Data.Entities.User();
+
+    private string viewName = "all";
+    private int accountsTaskId = 0;
+    private int viewForUserId = 0;
+
     private bool loading = true;
     private bool loadingError = false;
+    private bool isAdminOrDeveloper = false;
+
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
+        var authstate = await GetAuthenticationStateAsync.GetAuthenticationStateAsync();
+        var user = authstate.User;
+
+        if (user.IsInRole("Správce") || user.IsInRole("Vývojář"))
+        {
+            isAdminOrDeveloper = true;
+        }
+
         try
         {
-            tasks = await httpClient.GetFromJsonAsync<List<Demo.TaskManagement.Data.Entities.Task>>(NavigationManager.BaseUri + "api/tasks/getTasksForView");
+            accounts = await httpClient.GetFromJsonAsync<List<Demo.TaskManagement.Data.Entities.Account>>(NavigationManager.BaseUri + "api/accounts");
+            accountsTaskId = accounts.First().Id;
+            users = await httpClient.GetFromJsonAsync<List<Demo.TaskManagement.Data.Entities.User>>(NavigationManager.BaseUri + "api/users");
+            viewForUserId = users.First().Id;
+            tasks = await httpClient.GetFromJsonAsync<List<Demo.TaskManagement.Data.Entities.Task>>($"{NavigationManager.BaseUri}api/tasks/getTasksForView/{viewName}/{accountsTaskId}/{viewForUserId}");
             loading = false;
         }
         catch (Exception ex)
@@ -70,5 +135,28 @@ else
             loadingError = true;
             Console.Error.WriteLine(ex);
         }
+    }
+
+    async System.Threading.Tasks.Task OnChangeView(ChangeEventArgs e)
+    {
+        viewName = e.Value.ToString();
+        await ReloadTasks();
+    }
+
+    async System.Threading.Tasks.Task OnChangeAccount(ChangeEventArgs e)
+    {
+        accountsTaskId = Int32.Parse(e.Value.ToString());
+        await ReloadTasks();
+    }
+
+    async System.Threading.Tasks.Task OnChangeUser(ChangeEventArgs e)
+    {
+        viewForUserId = Int32.Parse(e.Value.ToString());
+        await ReloadTasks();
+    }
+
+    async System.Threading.Tasks.Task ReloadTasks()
+    {
+        tasks = await httpClient.GetFromJsonAsync<List<Demo.TaskManagement.Data.Entities.Task>>($"{NavigationManager.BaseUri}api/tasks/getTasksForView/{viewName}/{accountsTaskId}/{viewForUserId}");
     }
 }

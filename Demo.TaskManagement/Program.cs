@@ -31,6 +31,8 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
 builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<User>>();
+//builder.Services.AddScoped<TasksService>();
+builder.Services.AddScoped<ITaskService, TaskService>();
 
 builder.Services.AddControllersWithViews()
     .AddNewtonsoftJson(options =>

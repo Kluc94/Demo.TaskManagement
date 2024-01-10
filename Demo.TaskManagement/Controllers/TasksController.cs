@@ -1,4 +1,5 @@
 ﻿using Demo.TaskManagement.Data;
+using Demo.TaskManagement.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,10 +10,12 @@ namespace Demo.TaskManagement.Controllers
     public class TasksController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly ITaskService tasksService;
 
-        public TasksController(ApplicationDbContext context)
+        public TasksController(ApplicationDbContext context, ITaskService tasksService)
         {
             _context = context;
+            this.tasksService = tasksService;
         }
 
         // GET: api/Tasks
@@ -113,8 +116,8 @@ namespace Demo.TaskManagement.Controllers
 
         // GET: api/GetTasksForView
         [HttpGet]
-        [Route("/api/tasks/getTasksForView")]
-        public async Task<ActionResult<IEnumerable<Data.Entities.Task>>> GetTasksForView()
+        [Route("/api/tasks/getTasksForView/{viewName}/{accountId}/{userId}")]
+        public async Task<ActionResult<IEnumerable<Data.Entities.Task>>> GetTasksForView(string viewName, int accountId, int? userId)
         {
             if (_context.Tasks == null)
             {
@@ -123,11 +126,7 @@ namespace Demo.TaskManagement.Controllers
 
             //TODO
             //Find way to define ?expand=... at calling so no custom endpoint needed
-            return await _context
-                .Tasks
-                .Include(t => t.Account)
-                .Include(t => t.AssignedTo)
-                .ToListAsync();
+            return await tasksService.GetTasksByView(viewName, accountId, userId).ToListAsync();
         }
 
         // GET: api/tasks/5/getTasksWithMessages

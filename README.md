@@ -7,3 +7,4 @@ Task - 4h<br>
 Message - 2h<br>
 CheckList - 2h<br>
 Users management for admin - 1h<br>
+Tasks View - 1,5h <br>

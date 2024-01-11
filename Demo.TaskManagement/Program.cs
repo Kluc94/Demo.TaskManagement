@@ -1,3 +1,4 @@
+using Demo.TaskManagement;
 using Demo.TaskManagement.Areas.Identity;
 using Demo.TaskManagement.Data;
 using Demo.TaskManagement.Data.Entities;
@@ -71,11 +72,21 @@ app.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id}");
 var scopeFactory = app.Services.GetRequiredService<IServiceScopeFactory>();
 using (var scope = scopeFactory.CreateScope())
 {
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<int>>>();
     await RoleService.EnsureRoles(roleManager);
 
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
     await UserService.EnsureAdmin(userManager);
+
+    var a = builder.Configuration.GetSection("Settings").Get<Settings>();
+    if (a.SeedData)
+    {
+        await UserService.EnsureSeedDataUsers(userManager);
+        await SeedData.Initialize(db, userManager);
+    }
 }
 
 app.Run();

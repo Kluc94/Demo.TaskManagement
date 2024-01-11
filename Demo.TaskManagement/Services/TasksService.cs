@@ -56,8 +56,7 @@ namespace Demo.TaskManagement.Services
                     tasks = ApplicationDbContext.Tasks
                         .Include(t => t.Account)
                         .Include(t => t.AssignedTo)
-                        .Where(t => t.State != Data.Enums.TaskState.Finished
-                                 && t.Deadline < DateTime.Now);
+                        .Where(t => t.State != Data.Enums.TaskState.Finished);
                     break;
 
                 case "openAfterDeadLine":

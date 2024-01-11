@@ -38,7 +38,7 @@ namespace Demo.TaskManagement.Data
 
             var account = await db.Accounts.FirstOrDefaultAsync(a => a.Title == "Elegis s.r.o");
             var user = await db.Users.FirstOrDefaultAsync(u => u.UserName == "michal.ondrak@elegis.cz");
-            var tester = await db.Users.FirstOrDefaultAsync(u => u.UserName == "michal.ondrak@elegis.cz");
+            var tester = await db.Users.FirstOrDefaultAsync(u => u.UserName == "tester@elegis.cz");
 
             if (account != null && user != null && tester != null)
             {
